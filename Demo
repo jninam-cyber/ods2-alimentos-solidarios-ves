@@ -1,0 +1,124 @@
+import ipywidgets as widgets
+from IPython.display import display, HTML
+import pandas as pd
+from datetime import datetime
+
+# Datos iniciales simulados
+comedores_data = {
+    "Nombre": ["Comedor Micaela Bastidas", "Olla Común Virgen de la Merced", "Comedor San Martín"],
+    "Sector": ["Sector 3, Grupo 15", "Sector 2, Grupo 1A", "Sector 6, Grupo 3"],
+    "Familias Beneficiadas": [80, 50, 110]
+}
+
+donaciones_data = [
+    {"Donante": "Mercado Unicachi", "Alimento": "20 Kg de Papas y Verduras frescas", "Hora": "Hace 10 min"},
+    {"Donante": "Panadería El Sol", "Alimento": "15 Bolsas de pan del día", "Hora": "Hace 35 min"}
+]
+
+# Estilos CSS emulando un celular
+css_style = """
+<style>
+.phone-container {
+    width: 360px;
+    height: 640px;
+    border: 12px solid #333;
+    border-radius: 36px;
+    background-color: #f9f9f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
+    overflow: hidden;
+    margin: auto;
+}
+.phone-header {
+    background-color: #2E7D32;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+.phone-content {
+    padding: 15px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+.card {
+    background: white;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border-left: 5px solid #4CAF50;
+}
+.btn-donar {
+    background-color: #FF9800 !important;
+    color: white !important;
+    font-weight: bold;
+}
+</style>
+"""
+display(HTML(css_style))
+
+# Widgets del Formulario
+input_donante = widgets.Text(placeholder='Ej. Minimarket VES', description='Donante:')
+input_alimento = widgets.Text(placeholder='Ej. 10 Kg de Arroz', description='Alimento:')
+btn_enviar = widgets.Button(description='Publicar Donación', button_style='warning')
+output_notificacion = widgets.Output()
+
+# Contenedor para la lista de donaciones dinámicas
+listado_donaciones = widgets.VBox()
+
+def actualizar_lista():
+    cartas = []
+    for donacion in donaciones_data:
+        carta_html = f"""
+        <div class='card'>
+            <strong>📍 {donacion['Donante']}</strong><br>
+            🎁 Donó: {donacion['Alimento']}<br>
+            <small style='color: gray;'>🕒 {donacion['Hora']}</small>
+        </div>
+        """
+        cartas.append(widgets.HTML(value=carta_html))
+    listado_donaciones.children = cartas
+
+def registrar_donacion(b):
+    donante = input_donante.value.strip()
+    alimento = input_alimento.value.strip()
+    if donante and alimento:
+        donaciones_data.insert(0, {
+            "Donante": donante,
+            "Alimento": alimento,
+            "Hora": "Justo ahora"
+        })
+        actualizar_lista()
+        with output_notificacion:
+            output_notificacion.clear_output()
+            print(f"¡Gracias {donante}! Donación publicada con éxito.")
+        input_donante.value = ''
+        input_alimento.value = ''
+    else:
+        with output_notificacion:
+            output_notificacion.clear_output()
+            print("Por favor rellena ambos campos.")
+
+btn_enviar.on_click(registrar_donacion)
+actualizar_lista()
+
+# Estructura visual de la App
+titulo_app = widgets.HTML("<div class='phone-header'>📱 AlimentaVES <br><small style='font-size:0.7em;'>ODS 2: Villa El Salvador</small></div>")
+
+seccion_donar_titulo = widgets.HTML("<h4>🙋‍♂️ ¿Quieres Donar Alimentos?</h4>")
+seccion_donar = widgets.VBox([seccion_donar_titulo, input_donante, input_alimento, btn_enviar, output_notificacion])
+
+seccion_comunidad_titulo = widgets.HTML("<h4>🍲 Últimas Donaciones Activas:</h4>")
+
+# Emular contenedor de celular
+phone_layout = widgets.VBox([
+    titulo_app,
+    widgets.VBox([seccion_donar, seccion_comunidad_titulo, listado_donaciones], layout=widgets.Layout(padding='15px', overflow='y-scroll', height='480px'))
+], layout=widgets.Layout(width='360px', height='600px', border='8px solid #333', border_radius='25px', overflow='hidden', background_color='#f9f9f9'))
+
+display(phone_layout)
